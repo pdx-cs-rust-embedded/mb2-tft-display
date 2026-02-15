@@ -12,13 +12,13 @@ use embedded_graphics::{
 use embedded_hal_bus::spi::ExclusiveDevice;
 use gc9a01::{self, mode::DisplayConfiguration};
 use microbit::hal::{
-    gpio::{p0::Parts, Level},
+    Spim,
+    gpio::{Level, p0::Parts},
     spim::{self, Frequency},
     timer::Timer,
-    Spim,
 };
 use panic_rtt_target as _;
-use rtt_target::{rtt_init_print};
+use rtt_target::rtt_init_print;
 
 #[entry]
 fn main() -> ! {
@@ -30,7 +30,7 @@ fn main() -> ! {
     let port0 = Parts::new(peripherals.P0);
     let mut timer0 = Timer::new(peripherals.TIMER0);
 
-    // Setup SPI 
+    // Setup SPI
     let sck = port0.p0_17.into_push_pull_output(Level::Low).degrade();
     let coti = port0.p0_13.into_push_pull_output(Level::Low).degrade();
 
@@ -77,11 +77,10 @@ fn main() -> ! {
             width: 100,
             height: 100,
         },
-        )
-        .into_styled(rect_style)
-        .draw(&mut display)
-        .unwrap();
-
+    )
+    .into_styled(rect_style)
+    .draw(&mut display)
+    .unwrap();
 
     loop {
         asm::wfe();
