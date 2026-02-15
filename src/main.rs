@@ -1,6 +1,5 @@
 #![no_main]
 #![no_std]
-// Referenced https://github.com/yuri91/ili9341-rs for SPI setup
 
 use cortex_m_rt::entry;
 use embedded_hal_bus::spi::{ExclusiveDevice};
@@ -19,12 +18,11 @@ fn init() -> ! {
     rtt_init_print!();
     let peripherals = microbit::pac::Peripherals::take().unwrap();
 
-
     // Put port 0 pins into gpio list
     let port0 = Parts::new(peripherals.P0);
     let mut timer0 = Timer::new(peripherals.TIMER0);
 
-
+    // Setup serial line
     let sck = port0.p0_17.into_push_pull_output(Level::Low).degrade();
     let mosi = port0.p0_13.into_push_pull_output(Level::Low).degrade();
 
@@ -60,6 +58,8 @@ fn init() -> ! {
     display.reset(&mut rst, &mut timer0); 
     display.init(&mut timer0).unwrap(); 
 
+
+    // Without embedded graphics
     let mut grad: [u16; 240*240] = [0; 240*240]; 
     
     fn gradient(grad: &mut [u16; 240*240], start: usize, end: usize, shift: usize) {
@@ -78,6 +78,9 @@ fn init() -> ! {
         Ok(_) => {}
         Err(e) => { rprintln!("{:?}", e); }
     }
+
+    // With embedded graphics
+    
 
     loop {}
 }
