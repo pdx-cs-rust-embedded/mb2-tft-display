@@ -13,7 +13,7 @@ use embedded_hal_bus::spi::ExclusiveDevice;
 use gc9a01::{self, mode::DisplayConfiguration};
 use microbit::hal::{
     Spim,
-    gpio::{Level, p0::Parts},
+    gpio::Level,
     spim::{self, Frequency},
     timer::Timer,
 };
@@ -24,22 +24,20 @@ use rtt_target::rtt_init_print;
 fn main() -> ! {
     rtt_init_print!();
 
-    let peripherals = microbit::pac::Peripherals::take().unwrap();
+    let board = microbit::Board::take().unwrap();
 
-    // Put port 0 pins into gpio list
-    let port0 = Parts::new(peripherals.P0);
-    let mut timer0 = Timer::new(peripherals.TIMER0);
+    let mut timer0 = Timer::new(board.TIMER0);
 
     // Setup SPI
-    let sck = port0.p0_17.into_push_pull_output(Level::Low).degrade();
-    let coti = port0.p0_13.into_push_pull_output(Level::Low).degrade();
+    let sck = board.pins.p0_17.into_push_pull_output(Level::Low).degrade();
+    let coti = board.pins.p0_13.into_push_pull_output(Level::Low).degrade();
 
-    let dc = port0.p0_10.into_push_pull_output(Level::Low);
-    let cs = port0.p0_12.into_push_pull_output(Level::Low);
-    let mut rst = port0.p0_09.into_push_pull_output(Level::High);
+    let dc = board.edge.e08.into_push_pull_output(Level::Low);
+    let cs = board.edge.e01.into_push_pull_output(Level::Low);
+    let mut rst = board.edge.e09.into_push_pull_output(Level::High);
 
     let spi_bus = Spim::new(
-        peripherals.SPIM0,
+        board.SPIM0,
         microbit::hal::spim::Pins {
             sck: Some(sck),
             mosi: Some(coti),
