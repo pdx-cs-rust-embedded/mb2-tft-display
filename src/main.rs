@@ -6,7 +6,7 @@ use embedded_graphics::{
     Drawable,
     pixelcolor::Rgb565,
     prelude::*,
-    primitives::{PrimitiveStyleBuilder, Rectangle},
+    primitives::{PrimitiveStyleBuilder, Triangle},
 };
 use embedded_hal::delay::DelayNs;
 use embedded_hal_bus::spi::ExclusiveDevice;
@@ -63,26 +63,24 @@ fn main() -> ! {
     // Call `embedded_graphics` `clear()` trait method
     <_ as embedded_graphics::draw_target::DrawTarget>::clear(&mut display, Rgb565::WHITE).unwrap();
 
-    let rect = |color| {
-        // make small rect
-        let rect_style = PrimitiveStyleBuilder::new()
+    let triangle = |color| {
+        // make upward-pointing triangle
+        let triangle_style = PrimitiveStyleBuilder::new()
             .fill_color(color)
             .build();
-        Rectangle::new(
-            Point { x: 70, y: 70 },
-            Size {
-                width: 100,
-                height: 100,
-            },
+        Triangle::new(
+            Point { x: 120, y: 70 },  // top vertex (apex)
+            Point { x: 70, y: 170 },   // bottom-left vertex
+            Point { x: 170, y: 170 },  // bottom-right vertex
         )
-        .into_styled(rect_style)
+        .into_styled(triangle_style)
     };
 
-    let rects = [rect(Rgb565::BLUE), rect(Rgb565::RED)];
+    let triangles = [triangle(Rgb565::BLUE), triangle(Rgb565::RED)];
 
     for i in 0.. {
         // Draw
-        rects[i & 1].draw(&mut display).unwrap();
+        triangles[i & 1].draw(&mut display).unwrap();
 
         // Hold
         timer0.delay_ms(1000);
