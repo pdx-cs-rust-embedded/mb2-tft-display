@@ -10,13 +10,13 @@ use embedded_graphics::{
 };
 use embedded_hal::delay::DelayNs;
 use embedded_hal_bus::spi::ExclusiveDevice;
-use gc9a01::{self, mode::DisplayConfiguration};
 use microbit::hal::{
     Spim,
     gpio::Level,
     spim::{self, Frequency},
     timer::Timer,
 };
+use mipidsi::{Builder, models::GC9A01, options::{ColorInversion, Orientation, Rotation}};
 use panic_rtt_target as _;
 use rtt_target::rtt_init_print;
 
@@ -34,7 +34,7 @@ fn main() -> ! {
 
     let dc = board.edge.e08.into_push_pull_output(Level::Low);
     let cs = board.edge.e01.into_push_pull_output(Level::Low);
-    let mut rst = board.edge.e09.into_push_pull_output(Level::High);
+    let rst = board.edge.e09.into_push_pull_output(Level::High);
 
     let spi_bus = Spim::new(
         board.SPIM0,
@@ -52,14 +52,13 @@ fn main() -> ! {
         dc,
     );
 
-    // Setup gc9a01 display
-    let mut display = gc9a01::Gc9a01::new(
-        spi,
-        gc9a01::prelude::DisplayResolution240x240,
-        gc9a01::prelude::DisplayRotation::Rotate180,
-    );
-    display.reset(&mut rst, &mut timer0);
-    display.init(&mut timer0).unwrap();
+    // Setup GC9A01 display using mipidsi
+    let mut display = Builder::new(GC9A01, spi)
+        .orientation(Orientation::new().rotate(Rotation::Deg180))
+        .invert_colors(ColorInversion::Inverted)
+        .reset_pin(rst)
+        .init(&mut timer0)
+        .unwrap();
 
     // Call `embedded_graphics` `clear()` trait method
     <_ as embedded_graphics::draw_target::DrawTarget>::clear(&mut display, Rgb565::WHITE).unwrap();
