@@ -1,7 +1,6 @@
 #![no_main]
 #![no_std]
 
-use cortex_m::asm;
 use cortex_m_rt::entry;
 use embedded_graphics::{
     Drawable,
@@ -9,6 +8,7 @@ use embedded_graphics::{
     prelude::*,
     primitives::{PrimitiveStyleBuilder, Rectangle},
 };
+use embedded_hal::delay::DelayNs;
 use embedded_hal_bus::spi::ExclusiveDevice;
 use gc9a01::{self, mode::DisplayConfiguration};
 use microbit::hal::{
@@ -37,13 +37,13 @@ fn main() -> ! {
     let mut rst = board.edge.e09.into_push_pull_output(Level::High);
 
     let spi_bus = Spim::new(
-        board.SPIM0,
+        board.SPIM3,
         microbit::hal::spim::Pins {
             sck: Some(sck),
             mosi: Some(coti),
             miso: None,
         },
-        Frequency::M16,
+        Frequency::M32,
         spim::MODE_0,
         0xFF, // ORC overflow character
     );
@@ -60,27 +60,33 @@ fn main() -> ! {
     );
     display.reset(&mut rst, &mut timer0);
     display.init(&mut timer0).unwrap();
-    display.clear().unwrap();
 
     // Call `embedded_graphics` `clear()` trait method
     <_ as embedded_graphics::draw_target::DrawTarget>::clear(&mut display, Rgb565::WHITE).unwrap();
 
-    // Draw small rect
-    let rect_style = PrimitiveStyleBuilder::new()
-        .fill_color(Rgb565::BLUE)
-        .build();
-    Rectangle::new(
-        Point { x: 70, y: 70 },
-        Size {
-            width: 100,
-            height: 100,
-        },
-    )
-    .into_styled(rect_style)
-    .draw(&mut display)
-    .unwrap();
+    let rect = |color| {
+        // make small rect
+        let rect_style = PrimitiveStyleBuilder::new()
+            .fill_color(color)
+            .build();
+        Rectangle::new(
+            Point { x: 70, y: 70 },
+            Size {
+                width: 100,
+                height: 100,
+            },
+        )
+        .into_styled(rect_style)
+    };
 
-    loop {
-        asm::wfe();
+    let rects = [rect(Rgb565::BLUE), rect(Rgb565::RED)];
+
+    for i in 0.. {
+        // Draw
+        rects[i & 1].draw(&mut display).unwrap();
+
+        // Hold
+        timer0.delay_ms(1000);
     }
+    unsafe { core::hint::unreachable_unchecked() }
 }
