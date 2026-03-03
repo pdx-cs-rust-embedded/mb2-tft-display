@@ -37,13 +37,13 @@ fn main() -> ! {
     let rst = board.edge.e09.into_push_pull_output(Level::High);
 
     let spi_bus = Spim::new(
-        board.SPIM0,
+        board.SPIM3,
         microbit::hal::spim::Pins {
             sck: Some(sck),
             mosi: Some(coti),
             miso: None,
         },
-        Frequency::M8,
+        Frequency::M32,
         spim::MODE_0,
         0xFF, // ORC overflow character
     );
@@ -78,12 +78,14 @@ fn main() -> ! {
 
     let triangles = [triangle(Rgb565::BLUE), triangle(Rgb565::RED)];
 
-    for i in 0.. {
+    for i in 0u64.. {
         // Draw
-        triangles[i & 1].draw(&mut display).unwrap();
+        triangles[(i & 1) as usize].draw(&mut display).unwrap();
 
         // Hold
         timer0.delay_ms(1000);
     }
+    // Safety: Loop above will either panic or wrap. In
+    // either case we are not getting here.
     unsafe { core::hint::unreachable_unchecked() }
 }
